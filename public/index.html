@@ -1,66 +1,423 @@
-<!doctype html>
-<html>
-	<head>
-		<meta charset="utf-8" />
-		<meta
-			name="viewport"
-			content="width=device-width, initial-scale=1.0, shrink-to-fit=no"
-		/>
-		<title>Scramjet</title>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="dark">
+<meta name="theme-color" content="#2b0f5c">
+<title>Drift</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Josefin+Sans:wght@300;400;600&family=Montserrat:wght@500;600&display=swap">
+<style>
+  :root {
+    --glass: rgba(26, 8, 60, .46);
+    --glass-hi: rgba(44, 18, 98, .78);
+    --line: rgba(255, 255, 255, .16);
+    --text: #fff;
+    --muted: rgba(255, 255, 255, .72);
+    --pink: #ff4fb0;
+    --orange: #ffa24a;
+    --violet: #9d6bff;
+    --ink: #1a0b3a;
+    --ok: #b6f06a;
+    --warn: #ffd36a;
+    --bad: #ff5d7a;
+    --display: "Josefin Sans", "Avenir Next", "Century Gothic", "Segoe UI", sans-serif;
+    --body: "Montserrat", "Segoe UI", system-ui, -apple-system, Roboto, "Helvetica Neue", Arial, sans-serif;
+    box-sizing: border-box;
+  }
+  *, *::before, *::after { box-sizing: inherit; }
+  html, body { margin: 0; height: 100%; }
+  body {
+    background:
+      linear-gradient(180deg, rgba(20, 6, 46, .26), rgba(20, 6, 46, .52)),
+      url("bg.jpg") center / cover no-repeat fixed,
+      #2b0f5c;
+    color: var(--text);
+    font: 15px/1.5 var(--body);
+    display: flex; flex-direction: column; overflow: hidden;
+    -webkit-font-smoothing: antialiased;
+  }
+  button, input { font: inherit; color: inherit; }
+  :focus-visible { outline: 2px solid var(--orange); outline-offset: 2px; }
 
-		<link rel="shortcut icon" content="favicon.webp" />
-	
-		<script src="/scram/scramjet.all.js"></script>
-		<script src="/baremux/index.js"></script>
-		
-		<link rel="stylesheet" href="index.css" />
-		<script src="register-sw.js" defer></script>
-		<script src="search.js" defer></script>
-		<script src="index.js" defer></script>
-	</head>
+  .glass {
+    background: var(--glass);
+    backdrop-filter: blur(18px) saturate(1.3); -webkit-backdrop-filter: blur(18px) saturate(1.3);
+    border: 1px solid var(--line);
+    box-shadow: 0 14px 44px -14px rgba(10, 0, 30, .65);
+  }
 
-	<body>
-		<div title="Scramjet Logo" class="flex-center logo-wrapper header-center">
-			<img class="logo" src="sj.png" alt="Scramjet" />
-			<h1>Scramjet | MW</h1>
-		</div>
-		<div class="flex-center desc left-margin">
-			<p>
-				Scramjet is an experimental interception based web proxy designed to
-				evade internet censorship, bypass arbitrary web browser restrictions and
-				innovate web proxy technologies.
-			</p>
-		</div>
+  /* ───────── toolbar ───────── */
+  #bar {
+    flex: none; height: 54px; z-index: 5;
+    margin: calc(10px + env(safe-area-inset-top, 0px)) 10px 0;
+    padding: 0 10px; border-radius: 18px;
+    display: flex; align-items: center; gap: 4px;
+  }
+  .ico {
+    width: 36px; height: 36px; flex: none; border: 0; border-radius: 12px; background: transparent;
+    color: var(--muted); display: grid; place-items: center; cursor: pointer; transition: background .15s, color .15s;
+  }
+  .ico:hover:not(:disabled) { background: rgba(255, 255, 255, .14); color: #fff; }
+  .ico:disabled { opacity: .35; cursor: default; }
+  .ico svg { width: 18px; height: 18px; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
 
-		<form id="sj-form" class="flex-center">
-			<input
-				id="sj-search-engine"
-				value="https://www.google.com/search?q=%s"
-				type="hidden"
-			/>
-			<input id="sj-address" type="text" placeholder="Search the web freely" />
-		</form>
-		<div class="desc left-margin">
-			<p id="sj-error"></p>
-			<pre id="sj-error-code"></pre>
-		</div>
-		<footer>
-			<div>
-				<a
-					title="The Mercury Workshop GitHub organization"
-					href="https://github.com/MercuryWorkshop"
-					>Mercury Workshop</a
-				>
-				<a
-					title="The example demo app for Scramjet"
-					href="https://github.com/MercuryWorkshop/Scramjet-Demo"
-					>GitHub</a
-				>
-				<a title="License information" href="credits.html">Credits</a>
-			</div>
-			<div>
-				<span>Scramjet &copy; MW 2025</span>
-			</div>
-		</footer>
-	</body>
+  #pill {
+    flex: 1; min-width: 0; height: 38px; margin: 0 6px; padding: 0 16px;
+    display: flex; align-items: center; gap: 10px; border-radius: 999px;
+    background: rgba(14, 3, 36, .38); border: 1px solid var(--line);
+    transition: border-color .15s, box-shadow .15s;
+  }
+  #pill:focus-within { border-color: var(--pink); box-shadow: 0 0 0 4px rgba(255, 79, 176, .22); }
+  #addr { flex: 1; min-width: 0; background: transparent; border: 0; outline: 0; font-size: 14px; letter-spacing: .02em; text-overflow: ellipsis; }
+  #addr::placeholder { color: var(--muted); }
+
+  #dot { width: 9px; height: 9px; flex: none; border-radius: 50%; background: var(--warn); transition: background .25s, box-shadow .25s; }
+  #dot[data-s="ready"] { background: var(--ok); box-shadow: 0 0 0 4px rgba(182, 240, 106, .22); }
+  #dot[data-s="error"] { background: var(--bad); box-shadow: 0 0 0 4px rgba(255, 93, 122, .25); }
+  #dot[data-s="connecting"] { animation: pulse 1.2s ease-in-out infinite; }
+  @keyframes pulse { 50% { opacity: .35; } }
+
+  /* ───────── stage ───────── */
+  #stage { flex: 1; position: relative; min-height: 0; }
+  #mount { position: absolute; inset: 10px; border-radius: 16px; overflow: hidden; box-shadow: 0 20px 60px -20px rgba(10, 0, 30, .75); }
+  #mount iframe { width: 100%; height: 100%; border: 0; background: #fff; display: block; }
+  #mount[hidden] { display: none; }
+
+  /* ───────── start page ───────── */
+  #start { position: absolute; inset: 0; overflow: auto; display: grid; place-items: center; padding: 24px 20px 150px; }
+  #start[hidden] { display: none; }
+  .hero { width: min(720px, 100%); text-align: center; }
+
+  .clock { margin-bottom: 38px; text-shadow: 0 2px 36px rgba(40, 0, 90, .6); animation: rise .8s cubic-bezier(.2, .7, .2, 1) both; }
+  #day { margin: 0; font: 300 clamp(32px, 9.5vw, 116px)/1 var(--display); letter-spacing: .3em; padding-left: .3em; }
+  #date { margin: 20px 0 0; font: 600 clamp(12px, 1.6vw, 17px)/1.2 var(--body); letter-spacing: .24em; padding-left: .24em; }
+  #time { margin: 14px 0 0; font: 500 clamp(12px, 1.5vw, 16px)/1.2 var(--body); letter-spacing: .22em; padding-left: .22em; color: var(--muted); }
+  @keyframes rise { from { opacity: 0; transform: translateY(12px); } }
+
+  #big {
+    width: min(560px, 100%); height: 56px; margin: 0 auto; padding: 0 8px 0 22px;
+    display: flex; align-items: center; gap: 12px; border-radius: 999px;
+    animation: rise .8s .1s cubic-bezier(.2, .7, .2, 1) both;
+    transition: border-color .15s, box-shadow .15s;
+  }
+  #big:focus-within { border-color: var(--pink); box-shadow: 0 0 0 5px rgba(255, 79, 176, .22), 0 14px 44px -14px rgba(10, 0, 30, .65); }
+  #big svg { width: 19px; height: 19px; flex: none; stroke: var(--muted); fill: none; stroke-width: 2; stroke-linecap: round; }
+  #bigIn { flex: 1; min-width: 0; height: 100%; background: transparent; border: 0; outline: 0; font-size: 16px; letter-spacing: .02em; }
+  #bigIn::placeholder { color: var(--muted); }
+  #go {
+    height: 40px; padding: 0 22px; border: 0; border-radius: 999px; cursor: pointer;
+    font: 600 12px var(--body); letter-spacing: .2em; color: var(--ink);
+    background: linear-gradient(120deg, var(--pink), var(--orange)); transition: transform .12s, filter .12s;
+  }
+  #go:hover { filter: brightness(1.08); }
+  #go:active { transform: scale(.96); }
+
+  /* dock */
+  #quick {
+    position: fixed; left: 50%; bottom: calc(26px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%);
+    max-width: calc(100% - 24px); padding: 10px 14px; border-radius: 24px; display: flex; gap: 10px;
+    background: var(--glass); backdrop-filter: blur(18px) saturate(1.3); -webkit-backdrop-filter: blur(18px) saturate(1.3);
+    border: 1px solid var(--line); box-shadow: 0 14px 44px -14px rgba(10, 0, 30, .65);
+    animation: rise .8s .2s cubic-bezier(.2, .7, .2, 1) both;
+  }
+  .tile { position: relative; padding: 0; border: 0; background: transparent; cursor: pointer; }
+  .tile i {
+    width: 50px; height: 50px; border-radius: 15px; display: grid; place-items: center;
+    font: 600 20px var(--display); font-style: normal; color: #fff; box-shadow: 0 6px 16px -6px rgba(0, 0, 0, .55);
+    transition: transform .18s cubic-bezier(.3, .8, .3, 1.3);
+  }
+  .tile:hover i, .tile:focus-visible i { transform: translateY(-7px) scale(1.1); }
+  .tile span {
+    position: absolute; bottom: calc(100% + 12px); left: 50%; transform: translate(-50%, 4px);
+    padding: 4px 10px; border-radius: 8px; background: var(--glass-hi); border: 1px solid var(--line);
+    font-size: 11px; font-weight: 600; letter-spacing: .16em; text-transform: uppercase; white-space: nowrap;
+    opacity: 0; pointer-events: none; transition: opacity .15s, transform .15s;
+  }
+  .tile:hover span, .tile:focus-visible span { opacity: 1; transform: translate(-50%, 0); }
+
+  .credit { position: fixed; left: 18px; bottom: calc(14px + env(safe-area-inset-bottom, 0px)); font-size: 11px; letter-spacing: .12em; color: rgba(255, 255, 255, .5); }
+
+  /* ───────── notice + diagnostics ───────── */
+  #note {
+    position: fixed; left: 50%; bottom: calc(22px + env(safe-area-inset-bottom, 0px)); transform: translate(-50%, 20px);
+    max-width: min(560px, calc(100vw - 32px)); padding: 12px 16px; border-radius: 14px; z-index: 10; font-size: 14px;
+    background: var(--glass-hi); backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px); border: 1px solid var(--line);
+    box-shadow: 0 20px 50px -15px rgba(0, 0, 0, .7);
+    opacity: 0; pointer-events: none; transition: opacity .2s, transform .2s;
+  }
+  #note.show { opacity: 1; transform: translate(-50%, 0); pointer-events: auto; }
+  #note b { color: var(--bad); font-weight: 600; }
+
+  #diag {
+    position: fixed; left: 16px; right: 16px; bottom: calc(86px + env(safe-area-inset-bottom, 0px));
+    max-width: 640px; margin: 0 auto; padding: 14px; border-radius: 14px; z-index: 11;
+    background: var(--glass-hi); backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px); border: 1px solid var(--line);
+    box-shadow: 0 20px 50px -15px rgba(0, 0, 0, .7);
+  }
+  #diag[hidden] { display: none; }
+  #diag p { margin: 0 0 8px; color: var(--muted); font-size: 13px; }
+  #diagText { margin: 0; max-height: 36vh; overflow: auto; padding: 10px; border-radius: 10px; background: rgba(10, 0, 30, .55); font: 12px/1.5 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; white-space: pre-wrap; word-break: break-word; }
+  #diag .acts { display: flex; gap: 8px; margin-top: 10px; }
+  #diag button { height: 34px; padding: 0 14px; border-radius: 999px; border: 1px solid var(--line); background: rgba(255, 255, 255, .1); cursor: pointer; }
+  #diag button.primary { border: 0; font-weight: 600; color: var(--ink); background: linear-gradient(120deg, var(--pink), var(--orange)); }
+
+  @media (max-width: 560px) { #home, #fwd { display: none; } .tile i { width: 44px; height: 44px; } #quick { gap: 6px; padding: 8px 10px; } .credit { display: none; } }
+  @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important; } }
+</style>
+</head>
+<body>
+
+<header id="bar" class="glass">
+  <button class="ico" id="back" title="Back" aria-label="Back" disabled><svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg></button>
+  <button class="ico" id="fwd" title="Forward" aria-label="Forward" disabled><svg viewBox="0 0 24 24"><path d="M9 18l6-6-6-6"/></svg></button>
+  <button class="ico" id="reload" title="Reload" aria-label="Reload" disabled><svg viewBox="0 0 24 24"><path d="M20 11a8 8 0 10-2.3 5.7"/><path d="M20 4v7h-7"/></svg></button>
+  <button class="ico" id="home" title="Start page" aria-label="Start page"><svg viewBox="0 0 24 24"><path d="M3 11l9-8 9 8"/><path d="M5 10v10h14V10"/></svg></button>
+  <form id="pill" autocomplete="off">
+    <span id="dot" data-s="connecting" title="Connecting…"></span>
+    <input id="addr" type="text" inputmode="url" spellcheck="false" autocapitalize="off" placeholder="Search or enter a web address" aria-label="Address bar">
+  </form>
+</header>
+
+<main id="stage">
+  <section id="start">
+    <div class="hero">
+      <div class="clock">
+        <h1 id="day">&nbsp;</h1>
+        <p id="date">&nbsp;</p>
+        <p id="time">&nbsp;</p>
+      </div>
+      <form id="big" class="glass" autocomplete="off">
+        <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>
+        <input id="bigIn" type="text" inputmode="url" spellcheck="false" autocapitalize="off" placeholder="Search or enter a web address" aria-label="Search or enter a web address" autofocus>
+        <button id="go" type="submit">GO</button>
+      </form>
+    </div>
+    <div id="quick"></div>
+    <div class="credit">Art by Lindsey Gallant</div>
+  </section>
+  <div id="mount" hidden></div>
+</main>
+
+<div id="note" role="status" aria-live="polite"></div>
+
+<section id="diag" hidden aria-label="Connection report">
+  <p>This report shows what your server provides. Copy it and send it along to get the page matched to your Scramjet version.</p>
+  <pre id="diagText"></pre>
+  <div class="acts">
+    <button id="diagCopy" class="primary" type="button">Copy report</button>
+    <button id="diagClose" type="button">Close</button>
+  </div>
+</section>
+
+<!-- Scramjet + BareMux, served by the Scramjet-App server -->
+<script src="/scram/scramjet.all.js"></script>
+<script src="/baremux/index.js"></script>
+<script>
+"use strict";
+
+/* ───────── settings ───────── */
+const SEARCH = "https://duckduckgo.com/?q=";   // swap for "https://www.google.com/search?q=" if you prefer
+const WISP   = (location.protocol === "https:" ? "wss://" : "ws://") + location.host + "/wisp/";
+const FILES  = { wasm: "/scram/scramjet.wasm.wasm", all: "/scram/scramjet.all.js", sync: "/scram/scramjet.sync.js" };
+const SITES  = [
+  ["Wikipedia", "https://wikipedia.org", "W", "linear-gradient(135deg,#6b7bb3,#3f4a7a)"],
+  ["YouTube",   "https://youtube.com",   "Y", "linear-gradient(135deg,#ff5d7a,#c9264a)"],
+  ["Reddit",    "https://reddit.com",    "R", "linear-gradient(135deg,#ffa24a,#e8582b)"],
+  ["GitHub",    "https://github.com",    "G", "linear-gradient(135deg,#9d6bff,#5a3bd1)"],
+  ["Discord",   "https://discord.com",   "D", "linear-gradient(135deg,#7289ff,#4a55e0)"],
+];
+
+/* ───────── elements ───────── */
+const $ = (id) => document.getElementById(id);
+const el = { back: $("back"), fwd: $("fwd"), reload: $("reload"), home: $("home"), pill: $("pill"), addr: $("addr"),
+             dot: $("dot"), big: $("big"), bigIn: $("bigIn"), start: $("start"), mount: $("mount"), quick: $("quick"), note: $("note") };
+
+let frame = null;
+let booting = null;
+let noteTimer;
+
+/* ───────── helpers ───────── */
+function setStatus(s, tip) {
+  el.dot.dataset.s = s;
+  el.dot.title = tip || { connecting: "Connecting…", ready: "Connected", error: "Connection problem" }[s];
+}
+
+function notify(html, ms = 6000) {
+  el.note.innerHTML = html;
+  el.note.classList.add("show");
+  clearTimeout(noteTimer);
+  if (ms) noteTimer = setTimeout(() => el.note.classList.remove("show"), ms);
+}
+
+function esc(s) { return String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c])); }
+
+function resolve(input) {
+  const v = input.trim();
+  if (!v) return "";
+  try { const u = new URL(v); if (u.protocol === "http:" || u.protocol === "https:") return u.href; } catch (_) {}
+  if (!/\s/.test(v) && /^[^/\s]+\.[a-z]{2,}([/?#].*)?$/i.test(v)) return "https://" + v;
+  return SEARCH + encodeURIComponent(v);
+}
+
+/* ───────── proxy bootstrap ───────── */
+function boot() {
+  if (booting) return booting;
+  booting = (async () => {
+    setStatus("connecting");
+    if (!("serviceWorker" in navigator)) {
+      throw new Error("Service workers need a secure (https) connection.");
+    }
+    if (typeof $scramjetLoadController !== "function") {
+      throw new Error(typeof $scramjet !== "undefined"
+        ? "This Scramjet build uses the newer 2.x API, which this page doesn’t support yet."
+        : "The Scramjet script didn’t load, or it exposes an API this page doesn’t expect.");
+    }
+    if (typeof BareMux === "undefined") {
+      throw new Error("The BareMux script didn’t load.");
+    }
+    const { ScramjetController } = $scramjetLoadController();
+    const controller = new ScramjetController({ files: FILES });
+    await controller.init();
+
+    await navigator.serviceWorker.register("./sw.js");
+    await navigator.serviceWorker.ready;
+
+    const connection = new BareMux.BareMuxConnection("/baremux/worker.js");
+    await connection.setTransport("/libcurl/index.mjs", [{ wisp: WISP }]);
+
+    frame = controller.createFrame();
+    frame.frame.title = "Proxied page";
+    el.mount.appendChild(frame.frame);
+
+    try {
+      frame.addEventListener("urlchange", (e) => { if (e && e.url) el.addr.value = e.url; syncNav(); });
+    } catch (_) { /* older builds have no urlchange event */ }
+
+    setStatus("ready");
+    ["back", "fwd", "reload"].forEach((k) => (el[k].disabled = false));
+  })().catch((err) => {
+    booting = null;               // allow a retry on the next navigation
+    setStatus("error", err.message);
+    console.error("[drift] boot failed:", err);
+    notify("<b>Couldn’t start the proxy.</b> " + esc(err.message), 0);
+    showReport(err);
+    throw err;
+  });
+  return booting;
+}
+
+/* ───────── diagnostics ───────── */
+async function buildReport(err) {
+  const lines = [];
+  const typeOf = (name) => { try { return typeof (0, eval)(name); } catch (_) { return "undefined"; } };
+
+  lines.push("Error: " + (err && err.message));
+  lines.push("Page: " + location.href);
+  lines.push("Secure context: " + window.isSecureContext + ", service workers: " + ("serviceWorker" in navigator));
+  lines.push("");
+  lines.push("Globals:");
+  ["$scramjetLoadController", "$scramjet", "$scramjetUtils", "BareMux"].forEach((n) => lines.push("  " + n + " = " + typeOf(n)));
+  lines.push("");
+  lines.push("Server files (HEAD requests):");
+  const paths = ["/scram/scramjet.all.js", "/scram/scramjet.wasm.wasm", "/scram/scramjet.sync.js",
+                 "/baremux/index.js", "/baremux/worker.js", "/libcurl/index.mjs", "/sw.js", "/wisp/"];
+  for (const p of paths) {
+    try {
+      const r = await fetch(p, { method: "HEAD", cache: "no-store" });
+      lines.push("  " + p + "  " + r.status + "  " + (r.headers.get("content-type") || ""));
+    } catch (e) {
+      lines.push("  " + p + "  failed (" + e.message + ")");
+    }
+  }
+  lines.push("");
+  lines.push("Scripts on this page: " + Array.from(document.scripts).map((s) => s.src).filter(Boolean).join(", "));
+  lines.push("Browser: " + navigator.userAgent);
+  if (err && err.stack) { lines.push(""); lines.push(String(err.stack).split("\n").slice(0, 6).join("\n")); }
+  return lines.join("\n");
+}
+
+async function showReport(err) {
+  $("diagText").textContent = "Collecting details…";
+  $("diag").hidden = false;
+  $("diagText").textContent = await buildReport(err);
+}
+
+$("diagCopy").addEventListener("click", async () => {
+  try { await navigator.clipboard.writeText($("diagText").textContent); $("diagCopy").textContent = "Copied"; }
+  catch (_) { const r = document.createRange(); r.selectNodeContents($("diagText")); const s = getSelection(); s.removeAllRanges(); s.addRange(r); $("diagCopy").textContent = "Selected, press Ctrl+C"; }
+  setTimeout(() => ($("diagCopy").textContent = "Copy report"), 2500);
+});
+$("diagClose").addEventListener("click", () => { $("diag").hidden = true; });
+
+/* ───────── navigation ───────── */
+function show(view) {
+  el.start.hidden = view !== "start";
+  el.mount.hidden = view !== "page";
+  if (view === "start") { el.addr.value = ""; el.bigIn.focus(); }
+}
+
+async function navigate(raw) {
+  const url = resolve(raw);
+  if (!url) return;
+  el.addr.value = url;
+  try {
+    await boot();
+    show("page");
+    frame.go(url);
+    el.note.classList.remove("show");
+    syncNav();
+  } catch (_) { /* boot() already reported the problem */ }
+}
+
+function history(dir) {
+  if (!frame) return;
+  try {
+    if (typeof frame[dir] === "function") return frame[dir]();
+    frame.frame.contentWindow.history[dir === "back" ? "back" : "forward"]();
+  } catch (e) { console.warn(e); }
+}
+
+function syncNav() {
+  try { if (frame && frame.url && el.addr !== document.activeElement) el.addr.value = String(frame.url); } catch (_) {}
+}
+
+/* ───────── wiring ───────── */
+el.pill.addEventListener("submit", (e) => { e.preventDefault(); navigate(el.addr.value); el.addr.blur(); });
+el.big.addEventListener("submit",  (e) => { e.preventDefault(); navigate(el.bigIn.value); });
+el.back.addEventListener("click",   () => history("back"));
+el.fwd.addEventListener("click",    () => history("forward"));
+el.reload.addEventListener("click", () => { if (!frame) return; try { typeof frame.reload === "function" ? frame.reload() : frame.frame.contentWindow.location.reload(); } catch (e) { console.warn(e); } });
+el.home.addEventListener("click",   () => show("start"));
+el.addr.addEventListener("focus",   () => el.addr.select());
+
+document.addEventListener("keydown", (e) => {
+  if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "l") { e.preventDefault(); el.addr.focus(); }
+  else if (e.key === "Escape") { el.note.classList.remove("show"); }
+});
+
+SITES.forEach(([name, url, letter, color]) => {
+  const b = document.createElement("button");
+  b.type = "button"; b.className = "tile"; b.title = url;
+  b.innerHTML = '<i style="background:' + color + '">' + letter + "</i><span>" + name + "</span>";
+  b.addEventListener("click", () => navigate(url));
+  el.quick.appendChild(b);
+});
+
+/* ───────── start-page clock ───────── */
+function tick() {
+  const d = new Date();
+  $("day").textContent  = d.toLocaleDateString("en-US", { weekday: "long" }).toUpperCase();
+  $("date").textContent = d.getDate() + "\u2002" + d.toLocaleDateString("en-US", { month: "long" }).toUpperCase() + ", " + d.getFullYear() + ".";
+  $("time").textContent = "- " + d.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" }) + " -";
+}
+tick();
+setInterval(tick, 15000);
+
+/* start connecting right away so the first search is instant */
+boot().catch(() => {});
+</script>
+</body>
 </html>
